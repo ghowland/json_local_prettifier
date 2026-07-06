@@ -10,7 +10,7 @@ HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Prettify</title>
+    <title>JSON Local Prettify</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,7 +66,7 @@ HTML = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h1>JSON Prettify</h1>
+        <h1>JSON Local Prettify</h1>
         <textarea id="raw" placeholder="Paste JSON here..."></textarea>
         <div class="buttons">
             <button onclick="doPrettify()">Prettify</button>
