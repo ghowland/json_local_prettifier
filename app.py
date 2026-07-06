@@ -37,8 +37,12 @@ HTML = """<!DOCTYPE html>
             border-radius: 4px;
         }
         textarea:focus { outline: 1px solid #00d2ff; }
-        button {
+        .buttons {
             margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
             padding: 10px 24px;
             background: #0f3460;
             color: #00d2ff;
@@ -49,16 +53,7 @@ HTML = """<!DOCTYPE html>
             border-radius: 4px;
         }
         button:hover { background: #1a4a7a; }
-        #result { margin-top: 20px; }
-        pre {
-            background: #16213e;
-            padding: 16px;
-            border-radius: 4px;
-            overflow-x: auto;
-            border: 1px solid #0f3460;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
+        #error { margin-top: 20px; }
         .error {
             background: #2e1a1a;
             border: 1px solid #cc3333;
@@ -72,13 +67,40 @@ HTML = """<!DOCTYPE html>
 <body>
     <div class="container">
         <h1>JSON Prettify</h1>
-        <form hx-post="/prettify" hx-target="#result" hx-swap="innerHTML">
-            <textarea name="raw" placeholder="Paste JSON here..."></textarea>
-            <br>
-            <button type="submit">Prettify</button>
-        </form>
-        <div id="result"></div>
+        <textarea id="raw" placeholder="Paste JSON here..."></textarea>
+        <div class="buttons">
+            <button onclick="doPrettify()">Prettify</button>
+            <button onclick="doCopy()">Copy</button>
+        </div>
+        <div id="error"></div>
     </div>
+    <script>
+        function doPrettify() {
+            var raw = document.getElementById("raw").value;
+            var errorDiv = document.getElementById("error");
+            errorDiv.innerHTML = "";
+
+            fetch("/prettify", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: "raw=" + encodeURIComponent(raw)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    document.getElementById("raw").value = data.pretty;
+                } else {
+                    errorDiv.innerHTML = '<div class="error">' + data.error + '</div>';
+                }
+            });
+        }
+
+        function doCopy() {
+            var ta = document.getElementById("raw");
+            ta.select();
+            navigator.clipboard.writeText(ta.value);
+        }
+    </script>
 </body>
 </html>"""
 
@@ -92,16 +114,14 @@ def index():
 def prettify():
     raw = request.form.get("raw", "")
     if not raw.strip():
-        return '<div class="error">Nothing to parse.</div>'
+        return {"ok": False, "error": "Nothing to parse."}
     try:
         parsed = json.loads(raw)
         pretty = json.dumps(parsed, indent=2, ensure_ascii=False)
-        # Escape HTML entities so rendered JSON is safe
-        safe = pretty.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        return f"<pre>{safe}</pre>"
+        return {"ok": True, "pretty": pretty}
     except json.JSONDecodeError as e:
         msg = f"Parse error at line {e.lineno}, column {e.colno}:\n{e.msg}"
-        return f'<div class="error">{msg}</div>'
+        return {"ok": False, "error": msg}
 
 
 if __name__ == "__main__":
