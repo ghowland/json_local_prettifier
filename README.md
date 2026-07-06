@@ -1,4 +1,4 @@
-# JSON Prettifier
+# JSON Local Prettifier
 
 A local JSON prettifier that runs entirely on your machine. Paste in ugly or minified JSON, hit Prettify, and get cleanly indented output right in the textarea — ready to copy.
 
